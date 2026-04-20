@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Garden Game</title>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #e8f5e9;
+    }
+    #garden {
+      display: grid;
+      grid-template-columns: repeat(5, 80px);
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .plot {
+      width: 80px;
+      height: 80px;
+      background: #c8e6c9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 24px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🌱 Garden Game</h1>
+<p>Score: <span id="score">0</span></p>
+
+<div id="garden"></div>
+
+<script>
+  const garden = document.getElementById("garden");
+  const scoreDisplay = document.getElementById("score");
+
+  let score = 0;
+
+  for (let i = 0; i < 25; i++) {
+    const plot = document.createElement("div");
+    plot.classList.add("plot");
+
+    plot.dataset.state = "empty";
+
+    plot.addEventListener("click", () => {
+      if (plot.dataset.state === "empty") {
+        plot.textContent = "🌱";
+        plot.dataset.state = "growing";
+
+        setTimeout(() => {
+          plot.textContent = "🌿";
+          plot.dataset.state = "grown";
+
+          score++;
+          scoreDisplay.textContent = score;
+        }, 2000);
+      }
+    });
+
+    garden.appendChild(plot);
+  }
+</script>
+
+</body>
+</html>
