@@ -1,9 +1,15 @@
 const garden = document.getElementById("garden");
 const statsDisplay = document.getElementById("stats");
+const gameInfo = document.getElementById("gameInfo");
 
-let coins = 5;
+let coins = 0;
 let water = 10;
 let selectedPlant = "fast";
+
+let level = 1;
+let timeLeft = 30;
+let targetCoins = 10;
+let timerInterval;
 
 const plantTypes = {
   fast: { emoji: "🌿", growTime: 1500, value: 2, cost: 1 },
@@ -13,6 +19,40 @@ const plantTypes = {
 
 function selectPlant(type) {
   selectedPlant = type;
+}
+
+function startLevel() {
+  coins = 0;
+  water = 10;
+  timeLeft = Math.max(15, 30 - level * 2);
+  targetCoins = Math.floor(10 + level * 10);
+
+  clearGarden();
+  updateUI();
+
+  clearInterval(timerInterval);
+  timerInterval = setInterval(gameTick, 1000);
+}
+
+function gameTick() {
+  timeLeft--;
+
+  // win condition
+  if (coins >= targetCoins) {
+    level++;
+    startLevel();
+    return;
+  }
+
+  // lose condition
+  if (timeLeft <= 0) {
+    alert("Game Over! Reached level " + level);
+    level = 1;
+    startLevel();
+    return;
+  }
+
+  updateUI();
 }
 
 function createPlot() {
@@ -43,7 +83,6 @@ function plantSeed(plot) {
   if (coins < plant.cost) return;
 
   coins -= plant.cost;
-  updateUI();
 
   plot.dataset.state = "growing";
   plot.dataset.value = plant.value;
@@ -57,12 +96,14 @@ function plantSeed(plot) {
     const decayTimer = setTimeout(() => {
       plot.textContent = "💀";
       plot.dataset.state = "dead";
-    }, 4000);
+    }, 3000);
 
     plot.dataset.timer = decayTimer;
   }, plant.growTime);
 
   plot.dataset.timer = growTimer;
+
+  updateUI();
 }
 
 function waterPlant(plot) {
@@ -71,9 +112,9 @@ function waterPlant(plot) {
   water--;
   updateUI();
 
-  plot.textContent = "💧";
-
   clearTimeout(plot.dataset.timer);
+
+  plot.textContent = "💧";
 
   setTimeout(() => {
     plot.textContent = "✨";
@@ -82,7 +123,7 @@ function waterPlant(plot) {
     const decayTimer = setTimeout(() => {
       plot.textContent = "💀";
       plot.dataset.state = "dead";
-    }, 4000);
+    }, 3000);
 
     plot.dataset.timer = decayTimer;
   }, 800);
@@ -90,8 +131,8 @@ function waterPlant(plot) {
 
 function harvest(plot) {
   coins += Number(plot.dataset.value);
-  updateUI();
   resetPlot(plot);
+  updateUI();
 }
 
 function resetPlot(plot) {
@@ -100,8 +141,16 @@ function resetPlot(plot) {
   clearTimeout(plot.dataset.timer);
 }
 
+function clearGarden() {
+  garden.innerHTML = "";
+  for (let i = 0; i < 25; i++) {
+    garden.appendChild(createPlot());
+  }
+}
+
 function updateUI() {
   statsDisplay.textContent = `Coins: ${coins} | Water: ${water} | Selected: ${selectedPlant}`;
+  gameInfo.textContent = `Level: ${level} | Time: ${timeLeft}s | Target: ${targetCoins}`;
 }
 
 // water regen
@@ -112,11 +161,4 @@ setInterval(() => {
   }
 }, 2000);
 
-function initGarden(size = 25) {
-  for (let i = 0; i < size; i++) {
-    garden.appendChild(createPlot());
-  }
-}
-
-initGarden();
-updateUI();
+startLevel();
