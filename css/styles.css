@@ -1,0 +1,30 @@
+body {
+  font-family: Arial;
+  text-align: center;
+  background: #e8f5e9;
+}
+
+#garden {
+  display: grid;
+  grid-template-columns: repeat(5, 80px);
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.plot {
+  width: 80px;
+  height: 80px;
+  background: #c8e6c9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 24px;
+  border-radius: 8px;
+  transition: transform 0.1s;
+}
+
+.plot:hover {
+  transform: scale(1.05);
+}
