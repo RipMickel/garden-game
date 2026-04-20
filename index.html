@@ -2,22 +2,224 @@
 <html>
 <head>
   <title>Garden Game</title>
-  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #e8f5e9;
+    }
+
+    #garden {
+      display: grid;
+      grid-template-columns: repeat(5, 80px);
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .plot {
+      width: 80px;
+      height: 80px;
+      background: #c8e6c9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 24px;
+      border-radius: 8px;
+    }
+
+    #controls button {
+      margin: 5px;
+      padding: 8px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
 
 <h1>🌱 Garden Game</h1>
 
 <p id="stats"></p>
+<p id="gameInfo"></p>
 
 <div id="controls">
   <button onclick="selectPlant('fast')">🌿 Fast (1💰)</button>
   <button onclick="selectPlant('balanced')">🌱 Balanced (2💰)</button>
   <button onclick="selectPlant('high')">🌻 High (4💰)</button>
 </div>
-<p id="gameInfo"></p>
+
 <div id="garden"></div>
 
-<script src="js/game.js"></script>
+<script>
+const garden = document.getElementById("garden");
+const statsDisplay = document.getElementById("stats");
+const gameInfo = document.getElementById("gameInfo");
+
+let coins = 5; // ✅ FIX: starting money
+let water = 10;
+let selectedPlant = "fast";
+
+let level = 1;
+let timeLeft = 30;
+let targetCoins = 10;
+let timerInterval;
+
+const plantTypes = {
+  fast: { emoji: "🌿", growTime: 1500, value: 2, cost: 1 },
+  balanced: { emoji: "🌱", growTime: 2500, value: 4, cost: 2 },
+  high: { emoji: "🌻", growTime: 4000, value: 8, cost: 4 }
+};
+
+function selectPlant(type) {
+  selectedPlant = type;
+  updateUI();
+}
+
+function startLevel() {
+  coins = 5; // ✅ always playable
+  water = 10;
+  timeLeft = Math.max(15, 30 - level * 2);
+  targetCoins = Math.floor(10 + level * 10);
+
+  clearGarden();
+  updateUI();
+
+  clearInterval(timerInterval);
+  timerInterval = setInterval(gameTick, 1000);
+}
+
+function gameTick() {
+  timeLeft--;
+
+  if (coins >= targetCoins) {
+    level++;
+    startLevel();
+    return;
+  }
+
+  if (timeLeft <= 0) {
+    alert("Game Over! Reached level " + level);
+    level = 1;
+    startLevel();
+    return;
+  }
+
+  updateUI();
+}
+
+function createPlot() {
+  const plot = document.createElement("div");
+  plot.classList.add("plot");
+  plot.dataset.state = "empty";
+
+  plot.addEventListener("click", () => handleClick(plot));
+
+  return plot;
+}
+
+function handleClick(plot) {
+  const state = plot.dataset.state;
+
+  if (state === "empty") {
+    plantSeed(plot);
+  } else if (state === "growing") {
+    waterPlant(plot);
+  } else if (state === "grown") {
+    harvest(plot);
+  }
+}
+
+function plantSeed(plot) {
+  const plant = plantTypes[selectedPlant];
+
+  if (coins < plant.cost) {
+    plot.textContent = "❌"; // ✅ feedback
+    setTimeout(() => (plot.textContent = ""), 500);
+    return;
+  }
+
+  coins -= plant.cost;
+
+  plot.dataset.state = "growing";
+  plot.dataset.value = plant.value;
+
+  plot.textContent = plant.emoji;
+
+  const growTimer = setTimeout(() => {
+    plot.textContent = "✨";
+    plot.dataset.state = "grown";
+
+    const decayTimer = setTimeout(() => {
+      plot.textContent = "💀";
+      plot.dataset.state = "dead";
+    }, 3000);
+
+    plot._timer = decayTimer; // ✅ FIX
+  }, plant.growTime);
+
+  plot._timer = growTimer; // ✅ FIX
+
+  updateUI();
+}
+
+function waterPlant(plot) {
+  if (water <= 0) return;
+
+  water--;
+  updateUI();
+
+  clearTimeout(plot._timer); // ✅ FIX
+
+  plot.textContent = "💧";
+
+  setTimeout(() => {
+    plot.textContent = "✨";
+    plot.dataset.state = "grown";
+
+    const decayTimer = setTimeout(() => {
+      plot.textContent = "💀";
+      plot.dataset.state = "dead";
+    }, 3000);
+
+    plot._timer = decayTimer;
+  }, 800);
+}
+
+function harvest(plot) {
+  coins += Number(plot.dataset.value);
+  resetPlot(plot);
+  updateUI();
+}
+
+function resetPlot(plot) {
+  plot.textContent = "";
+  plot.dataset.state = "empty";
+  clearTimeout(plot._timer);
+}
+
+function clearGarden() {
+  garden.innerHTML = "";
+  for (let i = 0; i < 25; i++) {
+    garden.appendChild(createPlot());
+  }
+}
+
+function updateUI() {
+  statsDisplay.textContent = `Coins: ${coins} | Water: ${water} | Selected: ${selectedPlant}`;
+  gameInfo.textContent = `Level: ${level} | Time: ${timeLeft}s | Target: ${targetCoins}`;
+}
+
+// water regen
+setInterval(() => {
+  if (water < 10) {
+    water++;
+    updateUI();
+  }
+}, 2000);
+
+startLevel();
+</script>
+
 </body>
 </html>
