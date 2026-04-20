@@ -2,13 +2,23 @@ const garden = document.getElementById("garden");
 const scoreDisplay = document.getElementById("score");
 
 let coins = 0;
+let water = 10;
+
+const plantTypes = [
+  { type: "fast", emoji: "🌿", growTime: 1500, value: 1 },
+  { type: "balanced", emoji: "🌱", growTime: 2500, value: 2 },
+  { type: "high", emoji: "🌻", growTime: 4000, value: 5 }
+];
+
+function getRandomPlant() {
+  return plantTypes[Math.floor(Math.random() * plantTypes.length)];
+}
 
 function createPlot() {
   const plot = document.createElement("div");
   plot.classList.add("plot");
 
   plot.dataset.state = "empty";
-  plot.dataset.timer = "";
 
   plot.addEventListener("click", () => handleClick(plot));
 
@@ -20,41 +30,49 @@ function handleClick(plot) {
 
   if (state === "empty") {
     plantSeed(plot);
+  } else if (state === "growing") {
+    waterPlant(plot);
   } else if (state === "grown") {
     harvest(plot);
-  } else if (state === "growing") {
-    water(plot);
   }
 }
 
 function plantSeed(plot) {
-  plot.textContent = "🌱";
+  const plant = getRandomPlant();
+
   plot.dataset.state = "growing";
+  plot.dataset.value = plant.value;
+  plot.dataset.type = plant.type;
+
+  plot.textContent = plant.emoji;
 
   const growTimer = setTimeout(() => {
-    plot.textContent = "🌻";
+    plot.textContent = "✨";
     plot.dataset.state = "grown";
 
-    // start decay timer
     const decayTimer = setTimeout(() => {
       plot.textContent = "💀";
       plot.dataset.state = "dead";
     }, 4000);
 
     plot.dataset.timer = decayTimer;
-  }, 2000);
+  }, plant.growTime);
 
   plot.dataset.timer = growTimer;
 }
 
-function water(plot) {
-  // speed up growth
+function waterPlant(plot) {
+  if (water <= 0) return;
+
+  water--;
+  updateUI();
+
   plot.textContent = "💧";
 
   clearTimeout(plot.dataset.timer);
 
   setTimeout(() => {
-    plot.textContent = "🌻";
+    plot.textContent = "✨";
     plot.dataset.state = "grown";
 
     const decayTimer = setTimeout(() => {
@@ -67,9 +85,8 @@ function water(plot) {
 }
 
 function harvest(plot) {
-  coins += 2;
-  scoreDisplay.textContent = coins;
-
+  coins += Number(plot.dataset.value);
+  updateUI();
   resetPlot(plot);
 }
 
@@ -79,6 +96,18 @@ function resetPlot(plot) {
   clearTimeout(plot.dataset.timer);
 }
 
+function updateUI() {
+  scoreDisplay.textContent = `Coins: ${coins} | Water: ${water}`;
+}
+
+// water regeneration
+setInterval(() => {
+  if (water < 10) {
+    water++;
+    updateUI();
+  }
+}, 2000);
+
 function initGarden(size = 25) {
   for (let i = 0; i < size; i++) {
     garden.appendChild(createPlot());
@@ -86,3 +115,4 @@ function initGarden(size = 25) {
 }
 
 initGarden();
+updateUI();
