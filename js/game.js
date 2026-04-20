@@ -1,23 +1,23 @@
 const garden = document.getElementById("garden");
-const scoreDisplay = document.getElementById("score");
+const statsDisplay = document.getElementById("stats");
 
-let coins = 0;
+let coins = 5;
 let water = 10;
+let selectedPlant = "fast";
 
-const plantTypes = [
-  { type: "fast", emoji: "🌿", growTime: 1500, value: 1 },
-  { type: "balanced", emoji: "🌱", growTime: 2500, value: 2 },
-  { type: "high", emoji: "🌻", growTime: 4000, value: 5 }
-];
+const plantTypes = {
+  fast: { emoji: "🌿", growTime: 1500, value: 2, cost: 1 },
+  balanced: { emoji: "🌱", growTime: 2500, value: 4, cost: 2 },
+  high: { emoji: "🌻", growTime: 4000, value: 8, cost: 4 }
+};
 
-function getRandomPlant() {
-  return plantTypes[Math.floor(Math.random() * plantTypes.length)];
+function selectPlant(type) {
+  selectedPlant = type;
 }
 
 function createPlot() {
   const plot = document.createElement("div");
   plot.classList.add("plot");
-
   plot.dataset.state = "empty";
 
   plot.addEventListener("click", () => handleClick(plot));
@@ -38,11 +38,15 @@ function handleClick(plot) {
 }
 
 function plantSeed(plot) {
-  const plant = getRandomPlant();
+  const plant = plantTypes[selectedPlant];
+
+  if (coins < plant.cost) return;
+
+  coins -= plant.cost;
+  updateUI();
 
   plot.dataset.state = "growing";
   plot.dataset.value = plant.value;
-  plot.dataset.type = plant.type;
 
   plot.textContent = plant.emoji;
 
@@ -97,10 +101,10 @@ function resetPlot(plot) {
 }
 
 function updateUI() {
-  scoreDisplay.textContent = `Coins: ${coins} | Water: ${water}`;
+  statsDisplay.textContent = `Coins: ${coins} | Water: ${water} | Selected: ${selectedPlant}`;
 }
 
-// water regeneration
+// water regen
 setInterval(() => {
   if (water < 10) {
     water++;

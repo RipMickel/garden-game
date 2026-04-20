@@ -7,7 +7,14 @@
 <body>
 
 <h1>🌱 Garden Game</h1>
-<p>Score: <span id="score">0</span></p>
+
+<p id="stats"></p>
+
+<div id="controls">
+  <button onclick="selectPlant('fast')">🌿 Fast (1💰)</button>
+  <button onclick="selectPlant('balanced')">🌱 Balanced (2💰)</button>
+  <button onclick="selectPlant('high')">🌻 High (4💰)</button>
+</div>
 
 <div id="garden"></div>
 
